@@ -1,6 +1,7 @@
 import ReceiptPrinterEncoder from '@point-of-sale/receipt-printer-encoder';
 import SystemReceiptPrinter from '@point-of-sale/system-receipt-printer';
 import { promisify } from 'node:util';
+import { Point } from 'where'
 import { discover, authenticate, request, setStatus, getStatus } from './signalk.mjs';
 import * as config from './config.mjs';
 let printers = SystemReceiptPrinter.getPrinters();
@@ -10,6 +11,15 @@ const clientId = '9c650970-f1b7-4c32-a337-5c0e79e4ebb7';
 const clientDesc = 'Signal K logbook printer';
 let clientStatus = {};
 let skHost = '';
+
+const printer = new SystemReceiptPrinter({
+  name: 'YICHIP3121_USB_Portable_Printer',
+});
+
+const encoder = new ReceiptPrinterEncoder({
+  name: 'pos-5890',
+  columns: 32,
+});
 
 // NOTE: As of 2024-11-01, the client will need admin-level access to be able to do plugin API calls
 
@@ -35,34 +45,92 @@ config.read(configFile)
       });
   })
   .then(() => {
+    console.log('Fetching new log entries');
     const url = `http://${skHost}/plugins/signalk-logbook/logs`;
     return request(url);
   })
-  .then((body) => {
-    console.log(body);
-    process.exit(0);
+  .then((logs) => {
+    if (clientStatus.lastPrinted) {
+      const lastDate = clientStatus.lastPrinted.substr(0, 10);
+      return logs.filter((date) => date >= lastDate);
+    }
+    return logs.slice(-1);
+  })
+  .then((newLogs) => {
+    return newLogs.reduce((prev, logDate) => {
+      return prev.then((data) => {
+        const url = `http://${skHost}/plugins/signalk-logbook/logs/${logDate}`;
+        return request(url)
+          .then((dateEntries) => {
+            return data.concat(dateEntries);
+          });
+      });
+    }, Promise.resolve([]));
+  })
+  .then((logEntries) => {
+    if (clientStatus.lastPrinted) {
+      return logEntries.filter((entry) => entry.datetime >= clientStatus.lastPrinted);
+    }
+    return logEntries.slice(-1);
+  })
+  .then((newEntries) => {
+    if (!newEntries.length) {
+      console.log('No unprinted log entries found');
+      process.exit(0);
+    }
+    console.log(`Found ${newEntries.length} unprinted log entries`);
+    let result = encoder
+      .initialize()
+      .codepage('cp850');
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    newEntries.forEach((entry) => {
+      const lines = [];
+      lines.push(entry.author.padStart(32, '-'));
+
+      const datetime = new Date(entry.datetime);
+      const month = months[datetime.getUTCMonth()];
+      const day = String(datetime.getUTCDate()).padStart(2, '0')
+      const hour = String(datetime.getUTCHours()).padStart(2, '0')
+      const minute = String(datetime.getUTCMinutes()).padStart(2, '0')
+      const dateStr = `${day}${month}${hour}:${minute}Z`;
+      const position = new Point(entry.position.latitude, entry.position.longitude).toString().replaceAll('′', '\'').replaceAll('″', '"');
+
+      lines.push(`${dateStr}|${position}`);
+
+      const course = String(entry.course).padStart(3, '0') + '°';
+      const speed = String(entry.speed.sog).padStart(2, '0') + 'kt';
+      const log = String(entry.log).padStart(5, '0') + 'NM';
+      const baro = `${entry.barometer}hPa`;
+      lines.push(`C${course} S${speed} L${log} ${baro}`);
+      lines.push(entry.text);
+      lines.forEach((l) => {
+        // console.log(l, l.length);
+        result = result.text(l).newline();
+      });
+    });
+    return result;
+  })
+  .then((result) => {
+    printer.print(result.encode());
+    console.log('Done');
+    process.exit();
   })
   .catch((e) => {
     console.log('Error');
     console.log(e);
     process.exit(1);
   });
-
-const printer = new SystemReceiptPrinter({
-  name: 'YICHIP3121_USB_Portable_Printer',
-});
-
-const encoder = new ReceiptPrinterEncoder({
-  name: 'pos-5890',
-  columns: 32,
-});
-let result = encoder
-  .initialize()
-  .codepage('cp850')
-  .text('Hello world')
-  .newline()
-  .encode();
-
-//console.log(result);
-
-//printer.print(result);
