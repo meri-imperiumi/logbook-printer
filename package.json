@@ -1,0 +1,20 @@
+{
+  "name": "@meri-imperiumi/logbook-printer",
+  "version": "0.1.0",
+  "description": "Print digital logbook entries via a receipt printer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Henri Bergius <henri.bergius@iki.fi>",
+  "license": "MIT",
+  "devDependencies": {
+    "@point-of-sale/system-receipt-printer": "^2.0.0"
+  },
+  "dependencies": {
+    "@point-of-sale/receipt-printer-encoder": "^3.0.2",
+    "bonjour-service": "^1.2.1",
+    "node-fetch": "^3.3.2",
+    "where": "^0.4.2"
+  }
+}
