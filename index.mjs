@@ -2,6 +2,7 @@ import ReceiptPrinterEncoder from '@point-of-sale/receipt-printer-encoder';
 import SystemReceiptPrinter from '@point-of-sale/system-receipt-printer';
 import { promisify } from 'node:util';
 import { Point } from 'where'
+import beaufort from 'beaufort-scale';
 import { discover, authenticate, request, setStatus, getStatus } from './signalk.mjs';
 import * as config from './config.mjs';
 let printers = SystemReceiptPrinter.getPrinters();
@@ -35,7 +36,7 @@ function formatNumber(value, maxLength) {
   if (value > 10) {
     return value.toPrecision(2).padStart(maxLength, '0');
   }
-  return value.toPrecision(3).padStart(maxLength, '0');
+  return value.toPrecision(maxLength).padStart(maxLength, '0');
 }
 
 config.read(configFile)
@@ -137,7 +138,12 @@ config.read(configFile)
       const speed = formatNumber(entry.speed.sog, 3) + 'kt';
       const log = formatNumber(entry.log, 5) + 'NM';
       const baro = `${formatNumber(entry.barometer, 4)}hPa`;
-      lines.push(`C${course} S${speed} L${log} ${baro}`);
+      let wind = '';
+      if (entry.wind) {
+        const windSpeed = entry.wind.speed | 0;
+        wind = `F${formatNumber(beaufort(windSpeed * 1.852).grade, 1)}`;
+      }
+      lines.push(`C${course} S${speed} L${log} ${baro} ${wind}`);
       lines.push(entry.text);
       lines.forEach((l) => {
         // console.log(l, l.length);

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@point-of-sale/receipt-printer-encoder": "^3.0.2",
+    "beaufort-scale": "^1.1.2",
     "bonjour-service": "^1.2.1",
     "node-fetch": "^3.3.2",
     "where": "^0.4.2"
