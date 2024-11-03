@@ -144,7 +144,9 @@ config.read(configFile)
         wind = `F${formatNumber(beaufort(windSpeed * 1.852).grade, 1)}`;
       }
       lines.push(`C${course} S${speed} L${log} ${baro} ${wind}`);
-      lines.push(entry.text);
+      if (entry.text) {
+        lines.push(entry.text);
+      }
       lines.forEach((l) => {
         // console.log(l, l.length);
         result = result.text(l).newline();
