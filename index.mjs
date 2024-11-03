@@ -23,6 +23,21 @@ const encoder = new ReceiptPrinterEncoder({
 
 // NOTE: As of 2024-11-01, the client will need admin-level access to be able to do plugin API calls
 
+function formatNumber(value, maxLength) {
+  // First just try padding
+  const padded = String(value).padStart(maxLength, '0');
+  if (padded.length <= maxLength) {
+    return padded;
+  }
+  if (value > 100) {
+    return String(Math.round(value)).padStart(maxLength, '0');
+  }
+  if (value > 10) {
+    return value.toPrecision(2).padStart(maxLength, '0');
+  }
+  return value.toPrecision(3).padStart(maxLength, '0');
+}
+
 config.read(configFile)
   .then((storedClientStatus) => {
     clientStatus = storedClientStatus;
@@ -99,22 +114,29 @@ config.read(configFile)
 
     newEntries.forEach((entry) => {
       const lines = [];
-      lines.push(entry.author.padStart(32, '-'));
+      const meta = [];
+      if (entry.author) {
+        meta.push(entry.author);
+      }
+      if (entry.category) {
+        meta.push(`#${entry.category}`);
+      }
+      lines.push(meta.join(' ').padStart(32, '-'));
 
       const datetime = new Date(entry.datetime);
       const month = months[datetime.getUTCMonth()];
       const day = String(datetime.getUTCDate()).padStart(2, '0')
       const hour = String(datetime.getUTCHours()).padStart(2, '0')
       const minute = String(datetime.getUTCMinutes()).padStart(2, '0')
-      const dateStr = `${day}${month}${hour}:${minute}Z`;
+      const dateStr = `${day}${month}${hour}:${minute}`;
       const position = new Point(entry.position.latitude, entry.position.longitude).toString().replaceAll('′', '\'').replaceAll('″', '"');
 
       lines.push(`${dateStr}|${position}`);
 
-      const course = String(entry.course).padStart(3, '0') + '°';
-      const speed = String(entry.speed.sog).padStart(2, '0') + 'kt';
-      const log = String(entry.log).padStart(5, '0') + 'NM';
-      const baro = `${entry.barometer}hPa`;
+      const course = formatNumber(entry.course, 3) + '°';
+      const speed = formatNumber(entry.speed.sog, 3) + 'kt';
+      const log = formatNumber(entry.log, 5) + 'NM';
+      const baro = `${formatNumber(entry.barometer, 4)}hPa`;
       lines.push(`C${course} S${speed} L${log} ${baro}`);
       lines.push(entry.text);
       lines.forEach((l) => {
