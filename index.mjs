@@ -1,11 +1,10 @@
 import ReceiptPrinterEncoder from '@point-of-sale/receipt-printer-encoder';
 import SystemReceiptPrinter from '@point-of-sale/system-receipt-printer';
-import { promisify } from 'node:util';
+import { stat } from 'node:fs/promises';
 import { Point } from 'where'
 import beaufort from 'beaufort-scale';
 import { discover, authenticate, request, setStatus, getStatus } from './signalk.mjs';
 import * as config from './config.mjs';
-let printers = SystemReceiptPrinter.getPrinters();
 
 const configFile = 'logbook-printer.json';
 const clientId = '9c650970-f1b7-4c32-a337-5c0e79e4ebb7';
@@ -16,6 +15,7 @@ let skHost = '';
 const printer = new SystemReceiptPrinter({
   name: 'YICHIP3121_USB_Portable_Printer',
 });
+const rawPrinter = '/dev/usb/lp0';
 
 const encoder = new ReceiptPrinterEncoder({
   name: 'pos-5890',
@@ -160,9 +160,25 @@ config.read(configFile)
     return result;
   })
   .then((result) => {
-    printer.print(result.encode());
-    clientStatus = getStatus();
-    return config.write(configFile, clientStatus);
+    let printerFound = true;
+    return stat(rawPrinter)
+      .catch((e) => {
+        if (e.code === 'ENOENT') {
+          console.log('Printer is offline, skipping');
+          clientStatus = getStatus();
+          return config.write(configFile, clientStatus)
+            .then(() => {
+              process.exit();
+            });
+        }
+      })
+      .then(() => {
+        // Printer is there, proceed
+        console.log('Printing');
+        printer.print(result.encode());
+        clientStatus = getStatus();
+        return config.write(configFile, clientStatus);
+      });
   })
   .then(() => {
     console.log('Done');
