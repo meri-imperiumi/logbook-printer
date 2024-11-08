@@ -68,7 +68,7 @@ export function authenticate(skHost, clientId, clientDesc) {
       }
       if (requestStatus.accessRequest.permission === 'DENIED') {
         delete clientStatus.accessRequest;
-        return Promise.reject(new Errot('Access request has been denied in Signal K'));
+        return Promise.reject(new Error('Access request has been denied in Signal K'));
 
       }
       delete clientStatus.accessRequest;
