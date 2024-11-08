@@ -49,15 +49,17 @@ config.read(configFile)
   .then((service) => {
     console.log(`Using Signal K service discovered in ${service.host}:${service.port}`);
     skHost = `${service.name}:${service.port}`;
-    return authenticate(skHost)
+    return authenticate(skHost, clientId, clientDesc)
       .catch((e) => {
         clientStatus = getStatus();
-        config.write(configFile, clientStatus);
-        return Promise.reject(e);
+        return config.write(configFile, clientStatus)
+          .then(() => {
+            return Promise.reject(e);
+          });
       })
       .then(() => {
         clientStatus = getStatus();
-        config.write(configFile, clientStatus);
+        return config.write(configFile, clientStatus);
       });
   })
   .then(() => {
@@ -151,16 +153,22 @@ config.read(configFile)
         // console.log(l, l.length);
         result = result.text(l).newline();
       });
+
+      clientStatus.lastPrinted = entry.datetime;
     });
+    setStatus(clientStatus);
     return result;
   })
   .then((result) => {
     printer.print(result.encode());
+    clientStatus = getStatus();
+    return config.write(configFile, clientStatus);
+  })
+  .then(() => {
     console.log('Done');
     process.exit();
   })
   .catch((e) => {
-    console.log('Error');
     console.log(e);
     process.exit(1);
   });

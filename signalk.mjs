@@ -26,7 +26,7 @@ export function discover() {
   });
 }
 
-export function authenticate(skHost) {
+export function authenticate(skHost, clientId, clientDesc) {
   if (clientStatus.accessToken) {
     // We already have token, can continue
     // TODO: Verify that token is still valid and has "admin" privs
@@ -56,7 +56,6 @@ export function authenticate(skHost) {
   return fetch(url)
     .then((res) => res.json())
     .then((requestStatus) => {
-      console.log(requestStatus);
       if (requestStatus.state === 'PENDING') {
         return Promise.reject(new Error('Access token request is pending, please approve via Signal K admin interface'));
       }

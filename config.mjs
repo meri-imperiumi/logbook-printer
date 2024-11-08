@@ -7,5 +7,8 @@ export function read(path) {
 }
 
 export function write(path, config) {
+  if (!config) {
+    throw new Error('No config provided');
+  }
   return writeFile(path, JSON.stringify(config, null, 2), 'utf-8');
 }
