@@ -70,7 +70,7 @@ config.read(configFile)
   .then((logs) => {
     if (clientStatus.lastPrinted) {
       const lastDate = clientStatus.lastPrinted.substr(0, 10);
-      return logs.filter((date) => date > lastDate);
+      return logs.filter((date) => date >= lastDate);
     }
     return logs.slice(-1);
   })
