@@ -83,7 +83,7 @@ config.read(configFile)
   })
   .then((logEntries) => {
     if (clientStatus.lastPrinted) {
-      return logEntries.filter((entry) => entry.datetime >= clientStatus.lastPrinted);
+      return logEntries.filter((entry) => entry.datetime > clientStatus.lastPrinted);
     }
     return logEntries.slice(-1);
   })
