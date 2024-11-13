@@ -1,6 +1,5 @@
 import ReceiptPrinterEncoder from '@point-of-sale/receipt-printer-encoder';
-import SystemReceiptPrinter from '@point-of-sale/system-receipt-printer';
-import { stat } from 'node:fs/promises';
+import { stat, appendFile } from 'node:fs/promises';
 import { Point } from 'where'
 import beaufort from 'beaufort-scale';
 import { discover, authenticate, request, setStatus, getStatus } from './signalk.mjs';
@@ -12,9 +11,6 @@ const clientDesc = 'Signal K logbook printer';
 let clientStatus = {};
 let skHost = '';
 
-const printer = new SystemReceiptPrinter({
-  name: 'YICHIP3121_USB_Portable_Printer',
-});
 const rawPrinter = '/dev/usb/lp0';
 
 const encoder = new ReceiptPrinterEncoder({
@@ -175,9 +171,11 @@ config.read(configFile)
       .then(() => {
         // Printer is there, proceed
         console.log('Printing');
-        printer.print(result.encode());
-        clientStatus = getStatus();
-        return config.write(configFile, clientStatus);
+        return appendFile(rawPrinter, result.encode())
+          .then(() => {
+            clientStatus = getStatus();
+            return config.write(configFile, clientStatus);
+          });
       });
   })
   .then(() => {
