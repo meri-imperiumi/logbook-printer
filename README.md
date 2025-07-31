@@ -12,8 +12,7 @@ You also need Node.js and git, as well as a Signal K instance in the same networ
 
 1. Check out this repository `git clone https://github.com/meri-imperiumi/logbook-printer.git && cd logbook-printer`
 2. Install dependencies `npm i`
-3. Run it manually `node index.mjs`
-4. Adjust the printer device in `index.mjs` according to your printer setup
+3. Run it manually `node index.mjs /dev/usb/lp0` (change `/dev/usb/lp0` to whichever path your printer is in)
 
 On first run the service should create a Signal K access request. Log into your Signal K admin panel and approve it. You need to provide _Admin_ level permissions.
 

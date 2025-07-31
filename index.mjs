@@ -11,7 +11,11 @@ const clientDesc = 'Signal K logbook printer';
 let clientStatus = {};
 let skHost = '';
 
-const rawPrinter = '/dev/usb/lp0';
+let rawPrinter = '/dev/usb/lp0';
+const lastArg = process.argv.at(-1);
+if (lastArg.indexOf('index.mjs') === -1) {
+  rawPrinter = lastArg;
+}
 
 const encoder = new ReceiptPrinterEncoder({
   name: 'pos-5890',
