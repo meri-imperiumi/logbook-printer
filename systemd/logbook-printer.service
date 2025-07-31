@@ -3,4 +3,4 @@ Description=Print latest logbook entries
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/node /home/pi/logbook-printer /dev/rfcomm0
+ExecStart=/usr/bin/node /home/pi/logbook-printer/index.mjs /dev/rfcomm0
