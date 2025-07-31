@@ -3,8 +3,8 @@ Description=Print new logbook entries every 15-30 minutes
 Requires=logbook-printer.service
 [Timer]
 Unit=logbook-printer.service
-OnUnitInactiveSec=15m
-RandomizedDelaySec=15m
+OnUnitInactiveSec=10m
+RandomizedDelaySec=5m
 AccuracySec=1s
 [Install]
 WantedBy=timers.target
