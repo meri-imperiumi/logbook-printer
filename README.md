@@ -19,3 +19,11 @@ On first run the service should create a Signal K access request. Log into your 
 ## Running
 
 Set up a cronjob to execute the script periodically. For instance every 15min.
+
+SystemD files are provided for this. Edit `systemd/logbook-printer.service` to point to your printer device. Then:
+
+```bash
+$ sudo cp systemd/* /etc/systemd/system
+$ sudo systemctl daemon-reload
+$ sudo systemctl enable logbook-printer.timer
+```
