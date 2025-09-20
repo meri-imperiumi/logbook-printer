@@ -4,4 +4,4 @@ Description=Print latest logbook entries
 [Service]
 Type=oneshot
 WorkingDirectory=/home/pi/logbook-printer
-ExecStart=/usr/bin/node /home/pi/logbook-printer/index.mjs /dev/rfcomm0
+ExecStart=/usr/bin/node /home/pi/logbook-printer/index.mjs /dev/usb/lp0
