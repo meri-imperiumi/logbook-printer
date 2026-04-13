@@ -136,7 +136,7 @@ config.read(configFile)
 
       lines.push(`${dateStr}|${position}`);
 
-      const course = formatNumber(entry.course, 3) + '°';
+      const course = formatNumber(entry.course || 0, 3) + '°';
       const speed = formatNumber(entry.speed.sog, 3) + 'kt';
       const log = formatNumber(entry.log, 5) + 'NM';
       const baro = `${formatNumber(entry.barometer, 4)}hPa`;
