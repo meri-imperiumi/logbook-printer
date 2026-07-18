@@ -118,6 +118,9 @@ config.read(configFile)
     newEntries.forEach((entry) => {
       const lines = [];
       const meta = [];
+      if (!entry.position) {
+	return;
+      }
       if (entry.author) {
         meta.push(entry.author);
       }
